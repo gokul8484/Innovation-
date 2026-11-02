@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Handwritten Notes to Digital Text Converter</title>
+<style>
+:root{--bg:#f6f7fb;--card:#fff;--tx:#1d2433;--mu:#5d6679;--ac:#3b5bdb;--bd:#e1e5ee}
+@media(prefers-color-scheme:dark){:root{--bg:#10141f;--card:#1a2030;--tx:#e8ebf3;--mu:#9aa4ba;--ac:#7c93ff;--bd:#2b3348}}
+*{box-sizing:border-box}
+:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0;font:16px/1.5 system-ui,sans-serif;background:var(--bg);color:var(--tx)}
+header{padding:28px 16px 8px;text-align:center}
+header h1{margin:0;font-size:1.6rem}
+header p{margin:6px auto 0;max-width:600px;color:var(--mu)}
+.badges span{display:inline-block;margin:10px 4px 0;padding:2px 12px;border-radius:99px;background:var(--ac);color:#fff;font-size:.8rem;font-weight:600}
+nav{display:flex;gap:6px;justify-content:center;margin:18px 0;flex-wrap:wrap}
+nav button{padding:8px 18px;border:1px solid var(--bd);background:var(--card);color:var(--tx);border-radius:8px;cursor:pointer;font-size:.95rem}
+nav button.on{background:var(--ac);color:#fff;border-color:var(--ac)}
+main{max-width:880px;margin:0 auto;padding:0 14px 50px}
+section{display:none}section.on{display:block}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:16px;margin-bottom:14px}
+h2{margin:0 0 8px;font-size:1.1rem}
+textarea,input[type=text],input[type=number]{width:100%;padding:10px;border:1px solid var(--bd);border-radius:8px;background:var(--bg);color:var(--tx);font:inherit}
+textarea{min-height:170px;resize:vertical}
+button.b{padding:9px 16px;border:0;border-radius:8px;background:var(--ac);color:#fff;font-size:.95rem;cursor:pointer;margin:6px 6px 0 0}
+button.b.s{background:var(--bd);color:var(--tx)}
+button.b:disabled{opacity:.5}
+img.pv,canvas.pv{max-width:100%;max-height:260px;border-radius:8px;border:1px solid var(--bd);margin-top:8px}
+.st{color:var(--mu);font-size:.9rem;margin-top:6px}
+.bar{height:6px;background:var(--bd);border-radius:9px;overflow:hidden;margin-top:6px}.bar i{display:block;height:100%;width:0;background:var(--ac);transition:width .2s}
+table{width:100%;border-collapse:collapse;font-size:.92rem}
+td,th{padding:7px;border-bottom:1px solid var(--bd);text-align:left;vertical-align:top}
+td input[type=number]{width:80px}
+.note{border-bottom:1px solid var(--bd);padding:10px 0}
+.note small{color:var(--mu)}
+.tot{font-size:1.2rem;font-weight:700;margin-top:10px}
+label.ck{font-size:.9rem;color:var(--mu)}
+footer{text-align:center;color:var(--mu);font-size:.8rem;padding:20px}
+</style>
+</head>
+<body>
+<header>
+  <h1>Handwritten Notes to Digital Text Converter</h1>
+  <p>Turn handwritten pages into searchable, editable and automatically graded digital text.</p>
+  <div class="badges"><span>OCR</span><span>AI</span><span>WEB</span></div>
+</header>
+
+<nav>
+  <button class="on" data-t="conv">1. Converter</button>
+  <button data-t="exam">2. Exam Auto-Grader</button>
+  <button data-t="saved">3. Saved Notes</button>
+  <button data-t="about">About</button>
+</nav>
+
+<main>
+<!-- CONVERTER -->
+<section id="conv" class="on">
+  <div class="card">
+    <h2>Capture</h2>
+    <input type="file" id="f1" accept="image/*" capture="environment">
+    <label class="ck"><input type="checkbox" id="pre1" checked> Clean image first (grayscale + threshold)</label><br>
+    <canvas id="pv1" class="pv" hidden></canvas>
+    <div class="bar"><i id="bar1"></i></div><div class="st" id="st1">Choose or photograph a handwritten page.</div>
+    <button class="b" id="go1" disabled>Extract text</button>
+  </div>
+  <div class="card">
+    <h2>Digital text (editable)</h2>
+    <textarea id="out1" placeholder="Extracted text appears here..."></textarea>
+    <button class="b" id="copy1">Copy</button>
+    <button class="b" id="pdf1">Download PDF</button>
+    <button class="b s" id="txt1">Download .txt</button>
+    <input type="text" id="title1" placeholder="Note title" style="margin-top:10px">
+    <button class="b" id="save1">Save note</button>
+  </div>
+</section>
+
+<!-- EXAM -->
+<section id="exam">
+  <div class="card">
+    <h2>Step 1 – Teacher's answer key</h2>
+    <div class="st">One line per question, in order: <b>marks | model answer | keyword1, keyword2</b></div>
+    <textarea id="key" style="min-height:130px">5 | Photosynthesis is the process where plants use sunlight, water and carbon dioxide to make glucose and oxygen | sunlight, water, carbon dioxide, glucose, oxygen
+3 | The heart pumps blood around the body | heart, pumps, blood</textarea>
+  </div>
+  <div class="card">
+    <h2>Step 2 – Student's handwritten answer sheet</h2>
+    <input type="file" id="f2" accept="image/*" capture="environment">
+    <div class="bar"><i id="bar2"></i></div><div class="st" id="st2">Upload the sheet. Answers should start with 1. 2. 3. (or Q1, Q2…).</div>
+    <textarea id="ans" placeholder="OCR text of the student's answers (you can fix it)..."></textarea>
+    <button class="b" id="go2" disabled>Read sheet</button>
+    <button class="b" id="grade">Grade answers</button>
+  </div>
+  <div class="card" id="res" hidden>
+    <h2>Step 3 – Review &amp; approve</h2>
+    <table><thead><tr><th>Q</th><th>Student answer</th><th>Match</th><th>Marks</th></tr></thead><tbody id="rows"></tbody></table>
+    <div class="tot" id="total"></div>
+    <button class="b" id="pdf2">Download marksheet PDF</button>
+  </div>
+</section>
+
+<!-- SAVED -->
+<section id="saved">
+  <div class="card">
+    <h2>Saved notes</h2>
+    <input type="text" id="q" placeholder="Search your notes...">
+    <div id="list"></div>
+  </div>
+</section>
+
+<!-- ABOUT -->
+<section id="about">
+  <div class="card">
+    <h2>How it works</h2>
+    <p>Image upload → preprocessing → OCR (Tesseract) → digital text → save / download. For exam sheets, answers are compared with the teacher's key using TF-IDF cosine similarity plus keyword matching, then the teacher reviews and approves the marks.</p>
+    <p class="st">Everything runs in your browser. Nothing is uploaded to a server. Notes are stored in this browser's local storage.</p>
+  </div>
+</section>
+</main>
+<footer>A2D Final Year Project</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script>
+const $ = id => document.getElementById(id);
+const files = {};
+
+// ---- tabs ----
+document.querySelectorAll('nav button').forEach(b => b.onclick = () => {
+  document.querySelectorAll('nav button,section').forEach(e => e.classList.remove('on'));
+  b.classList.add('on'); $(b.dataset.t).classList.add('on');
+  if (b.dataset.t === 'saved') renderNotes();
+});
+
+// ---- image preprocessing (grayscale + Otsu threshold) ----
+function loadImg(file) {
+  return new Promise((res, rej) => {
+    const im = new Image();
+    im.onload = () => res(im); im.onerror = rej;
+    im.src = URL.createObjectURL(file);
+  });
+}
+async function preprocess(file, clean, canvas) {
+  const im = await loadImg(file);
+  const k = Math.min(1, 2000 / im.width);
+  canvas.width = im.width * k; canvas.height = im.height * k;
+  const ctx = canvas.getContext('2d', { willReadFrequently: true });
+  ctx.drawImage(im, 0, 0, canvas.width, canvas.height);
+  if (!clean) return canvas;
+  const d = ctx.getImageData(0, 0, canvas.width, canvas.height), p = d.data, h = new Array(256).fill(0);
+  for (let i = 0; i < p.length; i += 4) { const g = (p[i] * .3 + p[i+1] * .59 + p[i+2] * .11) | 0; p[i] = g; h[g]++; }
+  const n = p.length / 4; let sum = 0; for (let i = 0; i < 256; i++) sum += i * h[i];
+  let sb = 0, wb = 0, best = 0, th = 128;
+  for (let t = 0; t < 256; t++) {
+    wb += h[t]; if (!wb) continue; const wf = n - wb; if (!wf) break;
+    sb += t * h[t]; const mb = sb / wb, mf = (sum - sb) / wf, v = wb * wf * (mb - mf) ** 2;
+    if (v > best) { best = v; th = t; }
+  }
+  for (let i = 0; i < p.length; i += 4) { const v = p[i] > th ? 255 : 0; p[i] = p[i+1] = p[i+2] = v; }
+  ctx.putImageData(d, 0, 0);
+  return canvas;
+}
+async function runOcr(file, clean, canvas, bar, st) {
+  st.textContent = 'Preparing image...';
+  await preprocess(file, clean, canvas);
+  canvas.hidden = false;
+  const r = await Tesseract.recognize(canvas, 'eng', {
+    logger: m => {
+      if (m.status === 'recognizing text') { bar.style.width = Math.round(m.progress * 100) + '%'; st.textContent = 'Reading handwriting... ' + Math.round(m.progress * 100) + '%'; }
+      else st.textContent = m.status + '...';
+    }
+  });
+  st.textContent = 'Done. Please check the text for mistakes.';
+  return r.data.text.trim();
+}
+
+// ---- converter ----
+$('f1').onchange = e => { files.f1 = e.target.files[0]; $('go1').disabled = !files.f1; $('st1').textContent = files.f1 ? files.f1.name : ''; };
+$('go1').onclick = async () => {
+  $('go1').disabled = true;
+  try { $('out1').value = await runOcr(files.f1, $('pre1').checked, $('pv1'), $('bar1'), $('st1')); }
+  catch (e) { $('st1').textContent = 'Error: ' + e.message; }
+  $('go1').disabled = false;
+};
+$('copy1').onclick = async () => { try { await navigator.clipboard.writeText($('out1').value); $('copy1').textContent = 'Copied!'; } catch { $('out1').select(); document.execCommand('copy'); $('copy1').textContent = 'Copied!'; } setTimeout(() => $('copy1').textContent = 'Copy', 1200); };
+function dl(name, blob) { const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; a.click(); }
+function makePdf(title, text, name) {
+  const doc = new jspdf.jsPDF(); doc.setFontSize(16); doc.text(title, 15, 20); doc.setFontSize(11);
+  let y = 32;
+  doc.splitTextToSize(text, 180).forEach(l => { if (y > 280) { doc.addPage(); y = 20; } doc.text(l, 15, y); y += 6; });
+  doc.save(name);
+}
+$('pdf1').onclick = () => makePdf($('title1').value || 'Digital Notes', $('out1').value, 'notes.pdf');
+$('txt1').onclick = () => dl('notes.txt', new Blob([$('out1').value], { type: 'text/plain' }));
+
+// ---- saved notes (localStorage) ----
+const getNotes = () => { try { return JSON.parse(localStorage.getItem('notes') || '[]'); } catch { return []; } };
+$('save1').onclick = () => {
+  if (!$('out1').value.trim()) return;
+  const n = getNotes(); n.unshift({ t: $('title1').value || 'Untitled', x: $('out1').value, d: new Date().toLocaleString() });
+  try { localStorage.setItem('notes', JSON.stringify(n)); } catch {} $('save1').textContent = 'Saved!'; setTimeout(() => $('save1').textContent = 'Save note', 1200);
+};
+function renderNotes() {
+  const q = $('q').value.toLowerCase(), box = $('list'); box.innerHTML = '';
+  const n = getNotes(); let shown = 0;
+  n.forEach((o, i) => {
+    if (q && !(o.t + ' ' + o.x).toLowerCase().includes(q)) return; shown++;
+    const d = document.createElement('div'); d.className = 'note';
+    const h = document.createElement('b'); h.textContent = o.t;
+    const s = document.createElement('small'); s.textContent = ' · ' + o.d;
+    const p = document.createElement('div'); p.textContent = o.x.slice(0, 200) + (o.x.length > 200 ? '…' : '');
+    const del = document.createElement('button'); del.className = 'b s'; del.textContent = 'Delete';
+    del.onclick = () => { n.splice(i, 1); try { localStorage.setItem('notes', JSON.stringify(n)); } catch {} renderNotes(); };
+    const op = document.createElement('button'); op.className = 'b s'; op.textContent = 'Open';
+    op.onclick = () => { $('out1').value = o.x; $('title1').value = o.t; document.querySelector('[data-t=conv]').click(); };
+    d.append(h, s, p, op, del); box.append(d);
+  });
+  if (!shown) box.textContent = 'No notes found.';
+}
+$('q').oninput = renderNotes;
+
+// ---- exam grader (TF-IDF cosine + keywords) ----
+$('f2').onchange = e => { files.f2 = e.target.files[0]; $('go2').disabled = !files.f2; $('st2').textContent = files.f2 ? files.f2.name : ''; };
+$('go2').onclick = async () => {
+  $('go2').disabled = true;
+  try { $('ans').value = await runOcr(files.f2, true, document.createElement('canvas'), $('bar2'), $('st2')); }
+  catch (e) { $('st2').textContent = 'Error: ' + e.message; }
+  $('go2').disabled = false;
+};
+const STOP = new Set('a an the is are was were of to in on and or it its this that for with as by be at from which who'.split(' '));
+const tok = s => (s.toLowerCase().match(/[a-z0-9]+/g) || []).filter(w => !STOP.has(w));
+function cosineTfidf(a, b) {
+  const A = tok(a), B = tok(b), vocab = [...new Set([...A, ...B])];
+  const idf = w => Math.log(3 / (1 + (A.includes(w) ? 1 : 0) + (B.includes(w) ? 1 : 0))) + 1;
+  const vec = T => vocab.map(w => T.filter(x => x === w).length * idf(w));
+  const x = vec(A), y = vec(B);
+  const dot = x.reduce((s, v, i) => s + v * y[i], 0), n = v => Math.sqrt(v.reduce((s, q) => s + q * q, 0));
+  return n(x) && n(y) ? dot / (n(x) * n(y)) : 0;
+}
+function splitAnswers(text, count) {
+  const parts = {}, re = /^\s*(?:Q(?:uestion)?\s*)?(\d+)\s*[.):\-]/gim; let m, last = null, idx = 0;
+  const marks = [];
+  while ((m = re.exec(text))) marks.push({ n: +m[1], s: m.index, e: m.index + m[0].length });
+  marks.forEach((k, i) => { parts[k.n] = text.slice(k.e, i + 1 < marks.length ? marks[i+1].s : text.length).trim(); });
+  return Array.from({ length: count }, (_, i) => parts[i + 1] || '');
+}
+let graded = [];
+$('grade').onclick = () => {
+  const key = $('key').value.split('\n').map(l => l.trim()).filter(Boolean).map(l => {
+    const [m, model, kw] = l.split('|').map(s => (s || '').trim());
+    return { max: parseFloat(m) || 1, model: model || '', kw: (kw || '').split(',').map(s => s.trim().toLowerCase()).filter(Boolean) };
+  });
+  const ans = splitAnswers($('ans').value, key.length);
+  graded = key.map((k, i) => {
+    const cos = cosineTfidf(k.model, ans[i]);
+    const hit = k.kw.length ? k.kw.filter(w => ans[i].toLowerCase().includes(w)).length / k.kw.length : cos;
+    const score = ans[i] ? 0.5 * cos + 0.5 * hit : 0;
+    return { ...k, ans: ans[i], score, marks: Math.round(score * k.max * 2) / 2 };
+  });
+  const tb = $('rows'); tb.innerHTML = '';
+  graded.forEach((g, i) => {
+    const tr = document.createElement('tr');
+    const c = [i + 1, g.ans || '(no answer found)', Math.round(g.score * 100) + '%'].map(v => { const td = document.createElement('td'); td.textContent = v; return td; });
+    const td = document.createElement('td'), inp = document.createElement('input');
+    inp.type = 'number'; inp.min = 0; inp.max = g.max; inp.step = 0.5; inp.value = g.marks;
+    inp.oninput = () => { g.marks = Math.min(g.max, Math.max(0, parseFloat(inp.value) || 0)); total(); };
+    td.append(inp, ' / ' + g.max); tr.append(...c, td); tb.append(tr);
+  });
+  $('res').hidden = false; total();
+};
+function total() {
+  const t = graded.reduce((s, g) => s + g.marks, 0), m = graded.reduce((s, g) => s + g.max, 0);
+  $('total').textContent = 'Total: ' + t + ' / ' + m;
+}
+$('pdf2').onclick = () => {
+  const lines = graded.map((g, i) => `Q${i + 1}: ${g.marks} / ${g.max}\nAnswer: ${g.ans || '-'}\n`).join('\n');
+  makePdf('Marksheet', lines + '\n' + $('total').textContent, 'marksheet.pdf');
+};
+</script>
+</body>
+</html>
